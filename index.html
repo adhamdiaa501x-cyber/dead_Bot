@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم إمبراطورية الفاتحون 🚀</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background-color: #1e1e2f; color: #fff; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: #27293d; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #e14eca; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        select, input[type="number"] { width: 100%; padding: 10px; border-radius: 6px; border: none; margin-top: 5px; background: #1e1e2f; color: #fff; }
+        .toggle-group { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; background: #1e1e2f; padding: 10px 15px; border-radius: 6px; }
+        button { width: 100%; padding: 12px; margin-top: 25px; background: #e14eca; border: none; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #c837b2; }
+        .status { margin-top: 15px; text-align: center; color: #00f2c3; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>إدارة القلاع 👑</h1>
+        
+        <label for="castleSelect">إختر القلعة:</label>
+        <select id="castleSelect" onchange="loadCastleData()">
+            {% for id, castle in castles.items() %}
+                <option value="{{ id }}">{{ castle.name }}</option>
+            {% endfor %}
+        </select>
+
+        <div class="toggle-group">
+            <span>تفعيل درع القلعة تلقائياً (Auto Shield):</span>
+            <input type="checkbox" id="autoShield">
+        </div>
+
+        <div class="toggle-group">
+            <span>تجميع الموارد من خريطة المملكة:</span>
+            <input type="checkbox" id="gatherResources">
+        </div>
+
+        <label for="targetLevel">مستوى الترقية المستهدف للمباني (1 - 18):</label>
+        <input type="number" id="targetLevel" min="1" max="18" value="18">
+
+        <button onclick="saveSettings()">حفظ الإعدادات 💾</button>
+
+        <div id="statusMsg" class="status"></div>
+    </div>
+
+    <script>
+        const castlesData = {{ castles | tojson }};
+
+        function loadCastleData() {
+            const selected = document.getElementById('castleSelect').value;
+            const castle = castlesData[selected];
+            if (castle) {
+                document.getElementById('autoShield').checked = castle.auto_shield;
+                document.getElementById('gatherResources').checked = castle.gather_resources;
+                document.getElementById('targetLevel').value = castle.target_level;
+            }
+        }
+
+        async function saveSettings() {
+            const selected = document.getElementById('castleSelect').value;
+            const payload = {
+                castle_id: selected,
+                auto_shield: document.getElementById('autoShield').checked,
+                gather_resources: document.getElementById('gatherResources').checked,
+                target_level: parseInt(document.getElementById('targetLevel').value)
+            };
+
+            const res = await fetch('/api/update_config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            document.getElementById('statusMsg').innerText = data.message;
+        }
+
+        loadCastleData();
+    </script>
+</body>
+</html>
